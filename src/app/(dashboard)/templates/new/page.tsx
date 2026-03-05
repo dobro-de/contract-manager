@@ -20,14 +20,21 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Info } from "lucide-react";
 
 type Field = {
   key: string;
   label: string;
   type: "text" | "date" | "number" | "textarea";
   required: boolean;
+};
+
+type Clause = {
+  title: string;
+  text: string;
 };
 
 export default function NewTemplatePage() {
@@ -37,30 +44,27 @@ export default function NewTemplatePage() {
   const [fields, setFields] = useState<Field[]>([
     { key: "vertragspartner", label: "Vertragspartner", type: "text", required: true },
   ]);
+  const [clauses, setClauses] = useState<Clause[]>([
+    { title: "Vertragsparteien", text: "" },
+  ]);
   const [saving, setSaving] = useState(false);
+
+  // ─── Field Handlers ─────────────────────────────────────────────────────────
 
   const addField = () => {
     setFields([
       ...fields,
-      {
-        key: `feld_${fields.length + 1}`,
-        label: "",
-        type: "text",
-        required: false,
-      },
+      { key: `feld_${fields.length + 1}`, label: "", type: "text", required: false },
     ]);
   };
 
-  const removeField = (index: number) => {
-    setFields(fields.filter((_, i) => i !== index));
-  };
+  const removeField = (index: number) => setFields(fields.filter((_, i) => i !== index));
 
   const updateField = (index: number, updates: Partial<Field>) => {
     setFields(
       fields.map((f, i) => {
         if (i !== index) return f;
         const updated = { ...f, ...updates };
-        // Auto-generate key from label
         if (updates.label !== undefined) {
           updated.key = updates.label
             .toLowerCase()
@@ -73,18 +77,41 @@ export default function NewTemplatePage() {
     );
   };
 
+  // ─── Clause Handlers ────────────────────────────────────────────────────────
+
+  const addClause = () => {
+    setClauses([...clauses, { title: "", text: "" }]);
+  };
+
+  const removeClause = (index: number) => setClauses(clauses.filter((_, i) => i !== index));
+
+  const updateClause = (index: number, updates: Partial<Clause>) => {
+    setClauses(clauses.map((c, i) => (i === index ? { ...c, ...updates } : c)));
+  };
+
+  const moveClause = (index: number, direction: "up" | "down") => {
+    const newClauses = [...clauses];
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= newClauses.length) return;
+    [newClauses[index], newClauses[target]] = [newClauses[target], newClauses[index]];
+    setClauses(newClauses);
+  };
+
+  const insertPlaceholder = (clauseIndex: number, fieldKey: string) => {
+    const clause = clauses[clauseIndex];
+    updateClause(clauseIndex, {
+      text: clause.text + `{{${fieldKey}}}`,
+    });
+  };
+
+  // ─── Submit ─────────────────────────────────────────────────────────────────
+
   const handleSubmit = async () => {
-    if (!name.trim()) {
-      toast.error("Name ist erforderlich");
-      return;
-    }
-    if (fields.length === 0) {
-      toast.error("Mindestens ein Feld erforderlich");
-      return;
-    }
-    if (fields.some((f) => !f.label.trim())) {
-      toast.error("Alle Felder brauchen ein Label");
-      return;
+    if (!name.trim()) return toast.error("Name ist erforderlich");
+    if (fields.length === 0) return toast.error("Mindestens ein Feld erforderlich");
+    if (fields.some((f) => !f.label.trim())) return toast.error("Alle Felder brauchen ein Label");
+    if (clauses.length > 0 && clauses.some((c) => !c.title.trim())) {
+      return toast.error("Alle Klauseln brauchen einen Titel");
     }
 
     setSaving(true);
@@ -92,7 +119,12 @@ export default function NewTemplatePage() {
       const res = await fetch("/api/templates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, fields }),
+        body: JSON.stringify({
+          name,
+          description,
+          fields,
+          clauses: clauses.filter((c) => c.title.trim()),
+        }),
       });
 
       if (!res.ok) {
@@ -110,14 +142,15 @@ export default function NewTemplatePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold">Neue Vorlage</h1>
         <p className="text-muted-foreground">
-          Definiere Felder die pro Vertrag ausgefüllt werden.
+          Definiere Felder und Vertragsklauseln mit dynamischen Platzhaltern.
         </p>
       </div>
 
+      {/* Basic Info */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Vorlage</CardTitle>
@@ -143,45 +176,44 @@ export default function NewTemplatePage() {
         </CardContent>
       </Card>
 
+      {/* Fields */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">
-            Felder ({fields.length})
-          </CardTitle>
+          <div>
+            <CardTitle className="text-base">Dynamische Felder ({fields.length})</CardTitle>
+            <CardDescription>
+              Diese Felder werden beim Erstellen eines Dokuments ausgefüllt und als {"{{platzhalter}}"} in Klauseln eingesetzt.
+            </CardDescription>
+          </div>
           <Button variant="outline" size="sm" onClick={addField}>
             <Plus className="h-4 w-4 mr-1" />
-            Feld hinzufügen
+            Feld
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           {fields.map((field, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30"
-            >
-              <GripVertical className="h-5 w-5 text-muted-foreground mt-2 shrink-0" />
+            <div key={index} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
               <div className="flex-1 grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Feldname</Label>
                   <Input
                     placeholder="z.B. Mieter Name"
                     value={field.label}
-                    onChange={(e) =>
-                      updateField(index, { label: e.target.value })
-                    }
+                    onChange={(e) => updateField(index, { label: e.target.value })}
                   />
+                  {field.key && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Platzhalter: <code className="bg-muted px-1 rounded">{`{{${field.key}}}`}</code>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs">Typ</Label>
                   <Select
                     value={field.type}
-                    onValueChange={(val) =>
-                      updateField(index, { type: val as Field["type"] })
-                    }
+                    onValueChange={(val) => updateField(index, { type: val as Field["type"] })}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="text">Text</SelectItem>
                       <SelectItem value="number">Zahl</SelectItem>
@@ -195,9 +227,7 @@ export default function NewTemplatePage() {
                 <input
                   type="checkbox"
                   checked={field.required}
-                  onChange={(e) =>
-                    updateField(index, { required: e.target.checked })
-                  }
+                  onChange={(e) => updateField(index, { required: e.target.checked })}
                   className="rounded"
                 />
                 Pflicht
@@ -212,10 +242,101 @@ export default function NewTemplatePage() {
               </Button>
             </div>
           ))}
-          {fields.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Noch keine Felder. Klicke &quot;Feld hinzufügen&quot;.
-            </p>
+        </CardContent>
+      </Card>
+
+      {/* Clauses */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base">Vertragsklauseln ({clauses.length})</CardTitle>
+            <CardDescription>
+              Schreibe Vertragstext mit {"{{platzhaltern}}"} für dynamische Werte. Jede Klausel wird als § nummeriert.
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={addClause}>
+            <Plus className="h-4 w-4 mr-1" />
+            Klausel
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {clauses.map((clause, index) => (
+            <div key={index} className="rounded-lg border overflow-hidden">
+              {/* Clause Header */}
+              <div className="flex items-center gap-2 px-4 py-2 bg-muted/50 border-b">
+                <span className="text-sm font-medium text-muted-foreground">§ {index + 1}</span>
+                <Input
+                  className="border-0 bg-transparent font-medium p-0 h-auto focus-visible:ring-0"
+                  placeholder="Klauseltitel"
+                  value={clause.title}
+                  onChange={(e) => updateClause(index, { title: e.target.value })}
+                />
+                <div className="flex gap-1 ml-auto shrink-0">
+                  <Button
+                    variant="ghost" size="icon" className="h-7 w-7"
+                    disabled={index === 0}
+                    onClick={() => moveClause(index, "up")}
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost" size="icon" className="h-7 w-7"
+                    disabled={index === clauses.length - 1}
+                    onClick={() => moveClause(index, "down")}
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeClause(index)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Clause Text */}
+              <div className="p-4 space-y-3">
+                <Textarea
+                  placeholder="Vertragstext hier eingeben... Verwende {{feldname}} für dynamische Werte."
+                  value={clause.text}
+                  onChange={(e) => updateClause(index, { text: e.target.value })}
+                  rows={6}
+                  className="font-mono text-sm"
+                />
+
+                {/* Insert Placeholder Buttons */}
+                {fields.length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                      <Info className="h-3 w-3" />
+                      Klick zum Einfügen:
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {fields
+                        .filter((f) => f.key)
+                        .map((f) => (
+                          <button
+                            key={f.key}
+                            type="button"
+                            onClick={() => insertPlaceholder(index, f.key)}
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                          >
+                            {`{{${f.key}}}`}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {clauses.length === 0 && (
+            <div className="text-center py-6 text-sm text-muted-foreground">
+              <p>Keine Klauseln. Klicke &quot;Klausel&quot; um Vertragstext hinzuzufügen.</p>
+              <p className="text-xs mt-1">Ohne Klauseln wird das PDF nur die Felder als Liste darstellen.</p>
+            </div>
           )}
         </CardContent>
         <CardFooter className="flex gap-3">

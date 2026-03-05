@@ -74,6 +74,7 @@ export const templates = pgTable("templates", {
   name: text("name").notNull(),
   description: text("description"),
   fields: text("fields").notNull(), // JSON: Array<{ key, label, type, required }>
+  clauses: text("clauses"), // JSON: Array<{ title, text }> — text kann {{platzhalter}} enthalten
   createdById: uuid("created_by_id")
     .notNull()
     .references(() => users.id),

@@ -44,6 +44,7 @@ export default async function TemplatesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {templates.map((template) => {
             const fields: TemplateField[] = JSON.parse(template.fields);
+            const clauseCount = template.clauses ? JSON.parse(template.clauses).length : 0;
             return (
               <Card key={template.id} className="hover:border-primary/50 transition-colors">
                 <CardHeader className="pb-3">
@@ -64,7 +65,7 @@ export default async function TemplatesPage() {
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground mt-3">
-                    {fields.length} Felder
+                    {fields.length} Felder · {clauseCount} Klauseln
                   </p>
                 </CardContent>
               </Card>

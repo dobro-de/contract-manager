@@ -168,6 +168,7 @@ export async function createTemplate(data: {
   name: string;
   description?: string;
   fields: string;
+  clauses?: string;
   createdById: string;
 }) {
   const [template] = await db.insert(templates).values(data).returning();

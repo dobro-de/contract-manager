@@ -14,6 +14,12 @@ const createTemplateSchema = z.object({
       required: z.boolean(),
     })
   ).min(1, "Mindestens ein Feld erforderlich"),
+  clauses: z.array(
+    z.object({
+      title: z.string().min(1),
+      text: z.string(),
+    })
+  ).optional(),
 });
 
 export async function GET() {
@@ -46,6 +52,7 @@ export async function POST(req: NextRequest) {
     name: parsed.data.name,
     description: parsed.data.description,
     fields: JSON.stringify(parsed.data.fields),
+    clauses: parsed.data.clauses?.length ? JSON.stringify(parsed.data.clauses) : undefined,
     createdById: session.user.id,
   });
 

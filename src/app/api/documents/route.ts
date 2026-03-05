@@ -7,7 +7,7 @@ import {
   createAuditLog,
 } from "@/lib/db/queries";
 import { generateContractPdf, type TemplateField } from "@/lib/pdf/generate";
-import { generateMietvertragPdf } from "@/lib/pdf/mietvertrag";
+import { generateClausePdf, type Clause } from "@/lib/pdf/clause-renderer";
 import { put } from "@vercel/blob";
 import { z } from "zod";
 
@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const isMietvertrag = template.name.toLowerCase().includes("mietvertrag");
-  const pdfBytes = isMietvertrag
-    ? await generateMietvertragPdf(fieldValues)
+  const clauses: Clause[] = template.clauses ? JSON.parse(template.clauses) : [];
+  const pdfBytes = clauses.length > 0
+    ? await generateClausePdf(contract.title, template.name, clauses, fields, fieldValues)
     : await generateContractPdf(
     template.name,
     fields,
