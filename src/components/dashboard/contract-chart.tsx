@@ -157,40 +157,7 @@ export function ContractCharts({
         </CardContent>
       </Card>
 
-      {/* Expiry Timeline */}
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Ablauf-Timeline (Tage bis Vertragsende)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {timelineData.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              Keine Verträge mit Enddatum.
-            </p>
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={timelineData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" fontSize={11} angle={-15} />
-                <YAxis
-                  tickFormatter={(v) => `${v}d`}
-                  fontSize={12}
-                />
-                <Tooltip
-                  formatter={(v) => [`${v} Tage`, "Verbleibend"]}
-                />
-                <Bar dataKey="tage" radius={[4, 4, 0, 0]}>
-                  {timelineData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+
     </div>
   );
 }
