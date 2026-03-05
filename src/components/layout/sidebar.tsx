@@ -9,6 +9,7 @@ import {
   LogOut,
   FileSignature,
   ClipboardList,
+  LayoutTemplate,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 const navItems = [
   { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard },
   { href: "/contracts", label: "Verträge", icon: FileText },
+  { href: "/templates", label: "Vorlagen", icon: LayoutTemplate },
   { href: "/audit-log", label: "Audit Log", icon: ClipboardList },
 ];
 

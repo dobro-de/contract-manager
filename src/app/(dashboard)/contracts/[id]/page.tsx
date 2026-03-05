@@ -1,4 +1,4 @@
-import { getContractById } from "@/lib/db/queries";
+import { getContractById, getDocumentsByContract } from "@/lib/db/queries";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import Link from "next/link";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, FileDown, ExternalLink } from "lucide-react";
 import { DeleteContractButton } from "@/components/contracts/delete-contract-button";
+import { GenerateDocument } from "@/components/contracts/generate-document";
 
 const statusConfig = {
   draft: { label: "Entwurf", variant: "secondary" as const },
@@ -25,6 +26,7 @@ export default async function ContractDetailPage({
   const { id } = await params;
   const contract = await getContractById(id);
   if (!contract) notFound();
+  const documents = await getDocumentsByContract(id);
 
   const status = statusConfig[contract.status];
 
@@ -45,6 +47,7 @@ export default async function ContractDetailPage({
           <p className="text-muted-foreground">{contract.counterparty}</p>
         </div>
         <div className="flex gap-2">
+          <GenerateDocument contractId={id} />
           <Link href={`/contracts/${id}/edit`}>
             <Button variant="outline" size="sm">
               <Pencil className="h-4 w-4 mr-2" />
@@ -122,6 +125,47 @@ export default async function ContractDetailPage({
               {format(new Date(contract.updatedAt), "dd.MM.yyyy HH:mm", { locale: de })}
             </span>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Documents */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileDown className="h-4 w-4 text-muted-foreground" />
+            Generierte Dokumente ({documents.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {documents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Noch keine Dokumente. Klicke &quot;PDF erstellen&quot; um ein Dokument aus einer Vorlage zu generieren.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{doc.fileName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Vorlage: {doc.templateName ?? "Unbekannt"} ·{" "}
+                      {format(new Date(doc.createdAt), "dd.MM.yyyy HH:mm", { locale: de })}
+                    </p>
+                  </div>
+                  {doc.fileUrl && (
+                    <a href={doc.fileUrl} target="_blank" rel="noreferrer">
+                      <Button variant="ghost" size="sm">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

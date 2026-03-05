@@ -59,9 +59,43 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// PDF Templates
+export const templates = pgTable("templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  fields: text("fields").notNull(), // JSON: Array<{ key, label, type, required }>
+  createdById: uuid("created_by_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Generated Documents (filled templates)
+export const documents = pgTable("documents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  contractId: uuid("contract_id")
+    .notNull()
+    .references(() => contracts.id),
+  templateId: uuid("template_id")
+    .notNull()
+    .references(() => templates.id),
+  fieldValues: text("field_values").notNull(), // JSON: { [key]: value }
+  fileUrl: text("file_url"), // Vercel Blob / S3 URL
+  fileName: text("file_name"),
+  createdById: uuid("created_by_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Contract = typeof contracts.$inferSelect;
 export type NewContract = typeof contracts.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
+export type Template = typeof templates.$inferSelect;
+export type NewTemplate = typeof templates.$inferInsert;
+export type Document = typeof documents.$inferSelect;

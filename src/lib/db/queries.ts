@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { contracts, auditLogs, users } from "./schema";
+import { contracts, auditLogs, users, templates, documents } from "./schema";
 import { eq, desc, like, or, and, sql } from "drizzle-orm";
 import type { CreateContractInput, UpdateContractInput } from "@/lib/validations/contract";
 
@@ -147,4 +147,65 @@ export async function createUser(data: {
 }) {
   const [user] = await db.insert(users).values(data).returning();
   return user;
+}
+
+// ─── Templates ────────────────────────────────────────────────────────────────
+
+export async function getTemplates() {
+  return db.select().from(templates).orderBy(desc(templates.createdAt));
+}
+
+export async function getTemplateById(id: string) {
+  const [template] = await db
+    .select()
+    .from(templates)
+    .where(eq(templates.id, id))
+    .limit(1);
+  return template ?? null;
+}
+
+export async function createTemplate(data: {
+  name: string;
+  description?: string;
+  fields: string;
+  createdById: string;
+}) {
+  const [template] = await db.insert(templates).values(data).returning();
+  return template;
+}
+
+export async function deleteTemplate(id: string) {
+  await db.delete(templates).where(eq(templates.id, id));
+}
+
+// ─── Documents ────────────────────────────────────────────────────────────────
+
+export async function getDocumentsByContract(contractId: string) {
+  return db
+    .select({
+      id: documents.id,
+      contractId: documents.contractId,
+      templateId: documents.templateId,
+      fieldValues: documents.fieldValues,
+      fileUrl: documents.fileUrl,
+      fileName: documents.fileName,
+      createdAt: documents.createdAt,
+      templateName: templates.name,
+    })
+    .from(documents)
+    .leftJoin(templates, eq(documents.templateId, templates.id))
+    .where(eq(documents.contractId, contractId))
+    .orderBy(desc(documents.createdAt));
+}
+
+export async function createDocument(data: {
+  contractId: string;
+  templateId: string;
+  fieldValues: string;
+  fileUrl?: string;
+  fileName?: string;
+  createdById: string;
+}) {
+  const [doc] = await db.insert(documents).values(data).returning();
+  return doc;
 }
