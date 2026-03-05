@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "./theme-toggle";
 
 const navItems = [
   { href: "/dashboard", label: "Übersicht", icon: LayoutDashboard },
@@ -53,6 +54,11 @@ export function Sidebar() {
       </nav>
 
       <Separator className="my-4" />
+
+      <div className="flex items-center justify-between px-3 mb-2">
+        <span className="text-xs text-muted-foreground">Design</span>
+        <ThemeToggle />
+      </div>
 
       {/* Logout */}
       <Button

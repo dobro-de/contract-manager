@@ -12,6 +12,7 @@ import {
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import Link from "next/link";
+import { ContractCharts } from "@/components/dashboard/contract-chart";
 
 const statusConfig = {
   draft: { label: "Entwurf", variant: "secondary" as const },
@@ -85,6 +86,17 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Charts */}
+      <ContractCharts
+        stats={stats}
+        contracts={recentContracts.map((c) => ({
+          title: c.title,
+          value: c.value,
+          status: c.status,
+          endDate: c.endDate?.toISOString() ?? null,
+        }))}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Contracts */}

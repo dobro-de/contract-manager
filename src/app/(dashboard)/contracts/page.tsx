@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Download } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -41,12 +41,20 @@ export default async function ContractsPage({
           <h1 className="text-2xl font-bold">Verträge</h1>
           <p className="text-muted-foreground">{contracts.length} Verträge</p>
         </div>
-        <Link href="/contracts/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Neuer Vertrag
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <a href="/api/contracts/export">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              CSV Export
+            </Button>
+          </a>
+          <Link href="/contracts/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Neuer Vertrag
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <ContractSearch />
