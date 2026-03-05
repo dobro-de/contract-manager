@@ -3,11 +3,11 @@ import { z } from "zod";
 export const createContractSchema = z.object({
   title: z.string().min(2, "Titel ist zu kurz").max(200),
   counterparty: z.string().min(2, "Vertragspartner fehlt").max(200),
-  status: z.enum(["draft", "active", "expiring_soon", "expired"]).default("draft"),
-  startDate: z.string().datetime().optional().nullable(),
-  endDate: z.string().datetime().optional().nullable(),
+  status: z.enum(["draft", "active", "expiring_soon", "expired"]),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
   value: z.number().int().positive().optional().nullable(),
-  currency: z.string().length(3).default("EUR"),
+  currency: z.string().length(3).optional(),
   notes: z.string().max(2000).optional().nullable(),
 });
 
