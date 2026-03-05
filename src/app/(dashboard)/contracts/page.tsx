@@ -10,11 +10,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, FileText, Download } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import Link from "next/link";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { ContractSearch } from "@/components/contracts/contract-search";
 import { DeleteContractButton } from "@/components/contracts/delete-contract-button";
+import { ExpiryBadge } from "@/components/contracts/expiry-badge";
+import { ContractCard } from "@/components/contracts/contract-card";
 
 const statusConfig = {
   draft: { label: "Entwurf", variant: "secondary" as const },
@@ -60,14 +63,15 @@ export default async function ContractsPage({
       <ContractSearch />
 
       {contracts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <h2 className="text-lg font-semibold">Keine Verträge gefunden</h2>
-          <p className="text-muted-foreground mb-4">
-            {params.search || params.status
+        <EmptyState
+          icon={FileText}
+          title="Keine Verträge gefunden"
+          description={
+            params.search || params.status
               ? "Keine Ergebnisse für diese Filter."
-              : "Leg deinen ersten Vertrag an."}
-          </p>
+              : "Leg deinen ersten Vertrag an."
+          }
+        >
           {!params.search && !params.status && (
             <Link href="/contracts/new">
               <Button>
@@ -76,9 +80,18 @@ export default async function ContractsPage({
               </Button>
             </Link>
           )}
-        </div>
+        </EmptyState>
       ) : (
-        <div className="rounded-md border">
+        <>
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-2">
+          {contracts.map((contract) => (
+            <ContractCard key={contract.id} contract={contract} />
+          ))}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -110,11 +123,14 @@ export default async function ContractsPage({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {contract.endDate
-                      ? format(new Date(contract.endDate), "dd.MM.yyyy", {
-                          locale: de,
-                        })
-                      : "—"}
+                    <span className="flex items-center gap-2">
+                      {contract.endDate
+                        ? format(new Date(contract.endDate), "dd.MM.yyyy", {
+                            locale: de,
+                          })
+                        : "—"}
+                      <ExpiryBadge endDate={contract.endDate} />
+                    </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {format(new Date(contract.createdAt), "dd.MM.yyyy", {
@@ -129,6 +145,7 @@ export default async function ContractsPage({
             </TableBody>
           </Table>
         </div>
+        </>
       )}
     </div>
   );

@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createContractSchema } from "@/lib/validations/contract";
 import { getContracts, createContract, createAuditLog } from "@/lib/db/queries";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { success, remaining } = rateLimit(`api:${session.user.id}`, 60);
+  if (!success) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded" },
+      { status: 429, headers: { "X-RateLimit-Remaining": "0" } }
+    );
   }
 
   const { searchParams } = req.nextUrl;

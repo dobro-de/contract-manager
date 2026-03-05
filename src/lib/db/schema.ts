@@ -16,6 +16,14 @@ export const contractStatusEnum = pgEnum("contract_status", [
   "expired",
 ]);
 
+// Organizations (Multi-Tenancy)
+export const organizations = pgTable("organizations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Users
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -23,6 +31,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: userRoleEnum("role").notNull().default("user"),
+  organizationId: uuid("organization_id").references(() => organizations.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -96,6 +105,7 @@ export type NewUser = typeof users.$inferInsert;
 export type Contract = typeof contracts.$inferSelect;
 export type NewContract = typeof contracts.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
 export type Template = typeof templates.$inferSelect;
 export type NewTemplate = typeof templates.$inferInsert;
 export type Document = typeof documents.$inferSelect;

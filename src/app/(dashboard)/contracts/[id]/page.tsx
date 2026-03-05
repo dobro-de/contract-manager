@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ArrowLeft, Pencil, FileDown, ExternalLink } from "lucide-react";
 import { DeleteContractButton } from "@/components/contracts/delete-contract-button";
 import { GenerateDocument } from "@/components/contracts/generate-document";
+import { ExpiryBanner } from "@/components/contracts/expiry-banner";
 
 const statusConfig = {
   draft: { label: "Entwurf", variant: "secondary" as const },
@@ -57,6 +58,8 @@ export default async function ContractDetailPage({
           <DeleteContractButton id={id} title={contract.title} />
         </div>
       </div>
+
+      <ExpiryBanner endDate={contract.endDate?.toISOString() ?? null} />
 
       {/* Details */}
       <Card>

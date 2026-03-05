@@ -10,6 +10,7 @@ import {
   FileSignature,
   ClipboardList,
   LayoutTemplate,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/contracts", label: "Verträge", icon: FileText },
   { href: "/templates", label: "Vorlagen", icon: LayoutTemplate },
   { href: "/audit-log", label: "Audit Log", icon: ClipboardList },
+  { href: "/settings", label: "Einstellungen", icon: Settings },
 ];
 
 export function Sidebar() {
